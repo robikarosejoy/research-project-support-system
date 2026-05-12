@@ -80,7 +80,7 @@ function Dashboard() {
         ) : (
           <div style={styles.projectGrid}>
             {projects.map((project) => (
-              <div key={project.id} style={styles.projectCard}>
+              <div key={project.id} style={styles.projectCard} onClick={() => navigate(`/project/${project.id}`)}>
                 <div style={styles.projectStatus}>{project.status}</div>
                 <h3 style={styles.projectTitle}>{project.title}</h3>
                 <p style={styles.projectDesc}>{project.description}</p>

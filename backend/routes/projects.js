@@ -101,3 +101,82 @@ router.post("/:id/members", authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+// GET PROJECT MEMBERS
+router.get("/:id/members", authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT pm.id, pm.role, u.name, u.email 
+       FROM project_members pm 
+       INNER JOIN users u ON pm.user_id = u.id 
+       WHERE pm.project_id = $1`,
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ADD MEMBER BY EMAIL
+router.post("/:id/members", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "PI") {
+      return res.status(403).json({ message: "Only PI can add members" });
+    }
+
+    const { email, role } = req.body;
+
+    const userResult = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = userResult.rows[0];
+
+    await pool.query(
+      "INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, $3)",
+      [req.params.id, user.id, role]
+    );
+
+    res.status(201).json({ message: "Member added successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET MILESTONES
+router.get("/:id/milestones", authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM milestones WHERE project_id = $1 ORDER BY due_date ASC",
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ADD MILESTONE
+router.post("/:id/milestones", authMiddleware, async (req, res) => {
+  try {
+    const { title, due_date } = req.body;
+
+    await pool.query(
+      "INSERT INTO milestones (project_id, title, due_date) VALUES ($1, $2, $3)",
+      [req.params.id, title, due_date]
+    );
+
+    res.status(201).json({ message: "Milestone added successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
