@@ -21,6 +21,7 @@ function Login() {
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("name", res.data.name);
       alert(`Welcome ${res.data.name}!`);
+      navigate("/dashboard");
     } catch (err) {
       setError("Invalid email or password. Please try again.");
     }
