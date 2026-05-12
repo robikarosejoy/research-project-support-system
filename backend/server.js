@@ -8,7 +8,10 @@ app.use(express.json());
 
 // Routes
 const authRoutes = require("./routes/auth");
+const projectRoutes = require("./routes/projects");
+
 app.use("/api/auth", authRoutes);
+app.use("/api/projects", projectRoutes);
 
 // Test route
 app.get("/", (req, res) => {
