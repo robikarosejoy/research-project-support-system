@@ -53,9 +53,8 @@ function ProjectDetail() {
         { email: memberEmail, role: memberRole },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Member added successfully!");
       setMemberEmail("");
-      fetchProjectDetails();
+      await fetchProjectDetails();
     } catch (error) {
       alert(error.response?.data?.message || "Failed to add member");
     }

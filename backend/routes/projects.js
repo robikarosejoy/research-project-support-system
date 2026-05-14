@@ -11,22 +11,43 @@ router.post("/create", authMiddleware, async (req, res) => {
       return res.status(403).json({ message: "Only PI can create projects" });
     }
 
-    const { title, description, funding_agency, total_budget, start_date, end_date } = req.body;
+    const {
+      title,
+      description,
+      funding_agency,
+      total_budget,
+      start_date,
+      end_date
+    } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO projects (title, description, funding_agency, total_budget, start_date, end_date, pi_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [title, description, funding_agency, total_budget, start_date, end_date, req.user.id]
+      `INSERT INTO projects 
+      (title, description, funding_agency, total_budget, start_date, end_date, pi_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *`,
+      [
+        title,
+        description,
+        funding_agency,
+        total_budget,
+        start_date,
+        end_date,
+        req.user.id
+      ]
     );
 
-    res.status(201).json({ message: "Project created successfully", project: result.rows[0] });
+    res.status(201).json({
+      message: "Project created successfully",
+      project: result.rows[0]
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// GET ALL PROJECTS (only projects user is part of)
+// GET ALL PROJECTS
 router.get("/", authMiddleware, async (req, res) => {
   try {
     let result;
@@ -38,8 +59,10 @@ router.get("/", authMiddleware, async (req, res) => {
       );
     } else {
       result = await pool.query(
-        `SELECT p.* FROM projects p
-         INNER JOIN project_members pm ON p.id = pm.project_id
+        `SELECT p.* 
+         FROM projects p
+         INNER JOIN project_members pm 
+         ON p.id = pm.project_id
          WHERE pm.user_id = $1
          ORDER BY p.created_at DESC`,
         [req.user.id]
@@ -47,6 +70,7 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 
     res.json(result.rows);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -62,91 +86,102 @@ router.get("/:id", authMiddleware, async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Project not found" });
+      return res.status(404).json({
+        message: "Project not found"
+      });
     }
 
     const project = result.rows[0];
 
     // Check access
     if (req.user.role === "PI" && project.pi_id !== req.user.id) {
-      return res.status(403).json({ message: "Access denied" });
+      return res.status(403).json({
+        message: "Access denied"
+      });
     }
 
     res.json(project);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ADD TEAM MEMBER (PI only)
-router.post("/:id/members", authMiddleware, async (req, res) => {
-  try {
-    if (req.user.role !== "PI") {
-      return res.status(403).json({ message: "Only PI can add members" });
-    }
-
-    const { user_id, role } = req.body;
-
-    await pool.query(
-      "INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, $3)",
-      [req.params.id, user_id, role]
-    );
-
-    res.status(201).json({ message: "Member added successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-module.exports = router;
 // GET PROJECT MEMBERS
 router.get("/:id/members", authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT pm.id, pm.role, u.name, u.email 
-       FROM project_members pm 
-       INNER JOIN users u ON pm.user_id = u.id 
+      `SELECT pm.id, pm.role, u.name, u.email
+       FROM project_members pm
+       INNER JOIN users u ON pm.user_id = u.id
        WHERE pm.project_id = $1`,
       [req.params.id]
     );
+
     res.json(result.rows);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ADD MEMBER BY EMAIL
+// ADD MEMBER BY EMAIL (PI only)
 router.post("/:id/members", authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "PI") {
-      return res.status(403).json({ message: "Only PI can add members" });
+      return res.status(403).json({
+        message: "Only PI can add members"
+      });
     }
 
     const { email, role } = req.body;
 
+    // Find user
     const userResult = await pool.query(
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
 
     if (userResult.rows.length === 0) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({
+        message: "User not found"
+      });
     }
 
     const user = userResult.rows[0];
 
+    // Check if already exists
+    const existingMember = await pool.query(
+      `SELECT * FROM project_members
+       WHERE project_id = $1 AND user_id = $2`,
+      [req.params.id, user.id]
+    );
+
+    if (existingMember.rows.length > 0) {
+      return res.status(400).json({
+        message: "Member already exists in this project"
+      });
+    }
+
+    // Insert member
     await pool.query(
-      "INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, $3)",
+      `INSERT INTO project_members
+       (project_id, user_id, role)
+       VALUES ($1, $2, $3)`,
       [req.params.id, user.id, role]
     );
 
-    res.status(201).json({ message: "Member added successfully" });
+    res.status(201).json({
+      message: "Member added successfully"
+    });
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error"
+    });
   }
 });
 
@@ -157,7 +192,9 @@ router.get("/:id/milestones", authMiddleware, async (req, res) => {
       "SELECT * FROM milestones WHERE project_id = $1 ORDER BY due_date ASC",
       [req.params.id]
     );
+
     res.json(result.rows);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -170,13 +207,20 @@ router.post("/:id/milestones", authMiddleware, async (req, res) => {
     const { title, due_date } = req.body;
 
     await pool.query(
-      "INSERT INTO milestones (project_id, title, due_date) VALUES ($1, $2, $3)",
+      `INSERT INTO milestones 
+       (project_id, title, due_date)
+       VALUES ($1, $2, $3)`,
       [req.params.id, title, due_date]
     );
 
-    res.status(201).json({ message: "Milestone added successfully" });
+    res.status(201).json({
+      message: "Milestone added successfully"
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 });
+
+module.exports = router;
