@@ -1,0 +1,13 @@
+PROJECT SUMMARY REPORT
+
+Project Title: {{title}}
+
+Principal Investigator: {{pi_name}}
+
+Funding Agency: {{funding_agency}}
+
+Total Budget: {{total_budget}}
+
+Start Date: {{start_date}}
+
+End Date: {{end_date}}
