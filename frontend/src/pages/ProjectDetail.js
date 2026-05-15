@@ -20,6 +20,9 @@ function ProjectDetail() {
   const [milestoneTitle, setMilestoneTitle] = useState("");
   const [milestoneDueDate, setMilestoneDueDate] = useState("");
 
+  const [documentFile, setDocumentFile] = useState(null);
+  const [documentCategory, setDocumentCategory] = useState("Report");
+
   useEffect(() => {
     fetchProjectDetails();
   }, []);
@@ -78,6 +81,58 @@ function ProjectDetail() {
 
   if (loading) return <p style={{ padding: "32px" }}>Loading...</p>;
   if (!project) return <p style={{ padding: "32px" }}>Project not found.</p>;
+
+  const generateSummary = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      `http://localhost:5000/api/documents/${id}/generate-summary`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    const blob = await response.blob();
+
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "project-summary.txt";
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+const uploadDocument = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const formData = new FormData();
+    formData.append("document", documentFile);
+    formData.append("document_category", documentCategory);
+
+    await fetch(`http://localhost:5000/api/uploads/${id}/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    alert("Document uploaded successfully");
+  } catch (error) {
+    console.error(error);
+    alert("Upload failed");
+  }
+};
 
   return (
     <div style={styles.container}>
@@ -201,6 +256,35 @@ function ProjectDetail() {
                 <button style={styles.addBtn} onClick={handleAddMilestone}>
                   Add Milestone
                 </button>
+                <button style={styles.addBtn} onClick={generateSummary}>
+  Generate Summary
+</button>
+
+<div style={{ marginTop: "20px" }}>
+  <h4 style={styles.addTitle}>Upload Project Document</h4>
+
+  <select
+    style={styles.input}
+    value={documentCategory}
+    onChange={(e) => setDocumentCategory(e.target.value)}
+  >
+    <option>Sanction Order</option>
+    <option>Report</option>
+    <option>Bill</option>
+    <option>Certificate</option>
+    <option>Other</option>
+  </select>
+
+  <input
+    style={styles.input}
+    type="file"
+    onChange={(e) => setDocumentFile(e.target.files[0])}
+  />
+
+  <button style={styles.addBtn} onClick={uploadDocument}>
+    Upload Document
+  </button>
+</div>
               </div>
             )}
           </div>
