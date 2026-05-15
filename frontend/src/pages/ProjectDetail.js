@@ -10,6 +10,7 @@ function ProjectDetail() {
   const [project, setProject] = useState(null);
   const [members, setMembers] = useState([]);
   const [milestones, setMilestones] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Add member state
@@ -43,6 +44,15 @@ function ProjectDetail() {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMilestones(milestonesRes.data);
+
+      const documentsRes = await axios.get(
+  `http://localhost:5000/api/uploads/${id}/documents`,
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  }
+);
+
+setDocuments(documentsRes.data);
     } catch (error) {
       console.error(error);
     }
@@ -133,6 +143,39 @@ const uploadDocument = async () => {
     alert("Upload failed");
   }
 };
+
+const downloadDocument = async (doc) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      `http://localhost:5000/api/uploads/download/${doc.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const blob = await response.blob();
+
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = doc.file_name;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+  } catch (error) {
+    console.error(error);
+    alert("Download failed");
+  }
+};
+
+
 
   return (
     <div style={styles.container}>
@@ -284,6 +327,34 @@ const uploadDocument = async () => {
   <button style={styles.addBtn} onClick={uploadDocument}>
     Upload Document
   </button>
+  <h4 style={{ marginTop: "20px" }}>Uploaded Documents</h4>
+
+{documents.length === 0 ? (
+  <p style={styles.emptyText}>No documents uploaded yet.</p>
+) : (
+  documents.map((doc) => (
+    <div
+      key={doc.id}
+      style={{
+        padding: "10px",
+        border: "1px solid #eee",
+        borderRadius: "6px",
+        marginTop: "10px",
+      }}
+    >
+      <p><strong>{doc.file_name}</strong></p>
+      <p>{doc.document_category}</p>
+
+      
+     <button
+  style={styles.addBtn}
+  onClick={() => downloadDocument(doc)}
+>
+  Download
+</button>
+    </div>
+  ))
+)}
 </div>
               </div>
             )}
