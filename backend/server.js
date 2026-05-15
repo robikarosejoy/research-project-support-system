@@ -4,6 +4,7 @@ const uploadRoutes = require("./routes/upload");
 const authRoutes = require("./routes/auth");
 const projectRoutes = require("./routes/projects");
 const documentRoutes = require("./routes/document");
+const budgetRoutes = require("./routes/budget");
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.use("/api/budgets", budgetRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/documents", documentRoutes);
