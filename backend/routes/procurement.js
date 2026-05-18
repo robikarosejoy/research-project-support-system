@@ -55,4 +55,21 @@ router.post("/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// UPDATE PROCUREMENT STATUS
+router.put("/:requestId/status", authMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    await pool.query(
+      "UPDATE procurement_requests SET status = $1 WHERE id = $2",
+      [status, req.params.requestId]
+    );
+
+    res.json({ message: "Procurement status updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
