@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -29,6 +29,8 @@ const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [memberEmail, setMemberEmail] = useState("");
   const [memberRole, setMemberRole] = useState("JRF");
 
+  const fileInputRef = useRef(null);
+  
   // Add milestone state
   const [milestoneTitle, setMilestoneTitle] = useState("");
   const [milestoneDueDate, setMilestoneDueDate] = useState("");
@@ -185,7 +187,13 @@ const uploadDocument = async () => {
     });
 
     alert("Document uploaded successfully");
-    setDocumentFile(null);
+
+setDocumentFile(null);
+
+if (fileInputRef.current) {
+  fileInputRef.current.value = "";
+}
+
 fetchProjectDetails();
   } catch (error) {
     console.error(error);
