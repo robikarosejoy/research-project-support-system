@@ -12,7 +12,19 @@ function ProjectDetail() {
   const [milestones, setMilestones] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [budgetSummary, setBudgetSummary] = useState(null);
+  const [expenses, setExpenses] = useState([]);
+  const [procurements, setProcurements] = useState([]);
 
+const [itemName, setItemName] = useState("");
+const [quantity, setQuantity] = useState("");
+const [estimatedCost, setEstimatedCost] = useState("");
+const [vendorName, setVendorName] = useState("");
+const [requestDate, setRequestDate] = useState("");
+const [procurementDescription, setProcurementDescription] = useState("");
+const [documentText, setDocumentText] = useState("");
+const [deleteMode, setDeleteMode] = useState(false);
+const [selectedDocuments, setSelectedDocuments] = useState([]);
   // Add member state
   const [memberEmail, setMemberEmail] = useState("");
   const [memberRole, setMemberRole] = useState("JRF");
@@ -24,6 +36,16 @@ function ProjectDetail() {
   const [documentFile, setDocumentFile] = useState(null);
   const [documentCategory, setDocumentCategory] = useState("Report");
 
+  const [expenseTitle, setExpenseTitle] = useState("");
+  const [expenseAmount, setExpenseAmount] = useState("");
+  const [expenseCategory, setExpenseCategory] = useState("Equipment");
+  const [expenseDate, setExpenseDate] = useState("");
+  const [expenseDescription, setExpenseDescription] = useState("");
+
+  const [notifications, setNotifications] = useState([]);
+const [notificationTitle, setNotificationTitle] = useState("");
+const [notificationMessage, setNotificationMessage] = useState("");
+const [notificationType, setNotificationType] = useState("Reminder");
   useEffect(() => {
     fetchProjectDetails();
   }, []);
@@ -53,6 +75,31 @@ function ProjectDetail() {
 );
 
 setDocuments(documentsRes.data);
+const budgetRes = await axios.get(
+  `http://localhost:5000/api/budgets/${id}`,
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  }
+);
+
+setExpenses(budgetRes.data.expenses);
+setBudgetSummary(budgetRes.data.summary);
+const procurementRes = await axios.get(
+  `http://localhost:5000/api/procurement/${id}`,
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  }
+);
+
+setProcurements(procurementRes.data);
+const notificationRes = await axios.get(
+  `http://localhost:5000/api/notifications/${id}`,
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  }
+);
+
+setNotifications(notificationRes.data);
     } catch (error) {
       console.error(error);
     }
@@ -138,6 +185,8 @@ const uploadDocument = async () => {
     });
 
     alert("Document uploaded successfully");
+    setDocumentFile(null);
+fetchProjectDetails();
   } catch (error) {
     console.error(error);
     alert("Upload failed");
@@ -175,7 +224,183 @@ const downloadDocument = async (doc) => {
   }
 };
 
+const addExpense = async () => {
+  try {
+    await axios.post(
+      `http://localhost:5000/api/budgets/${id}`,
+      {
+        title: expenseTitle,
+        amount: expenseAmount,
+        category: expenseCategory,
+        expense_date: expenseDate,
+        description: expenseDescription,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
+    alert("Expense added successfully");
+
+    setExpenseTitle("");
+    setExpenseAmount("");
+    setExpenseCategory("Equipment");
+    setExpenseDate("");
+    setExpenseDescription("");
+
+    fetchProjectDetails();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to add expense");
+  }
+};
+
+const addProcurement = async () => {
+  try {
+    await axios.post(
+      `http://localhost:5000/api/procurement/${id}`,
+      {
+        item_name: itemName,
+        quantity,
+        estimated_cost: estimatedCost,
+        vendor_name: vendorName,
+        request_date: requestDate,
+        description: procurementDescription,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert("Procurement request added successfully");
+
+    setItemName("");
+    setQuantity("");
+    setEstimatedCost("");
+    setVendorName("");
+    setRequestDate("");
+    setProcurementDescription("");
+
+    fetchProjectDetails();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to add procurement request");
+  }
+};
+
+const updateProcurementStatus = async (requestId, status) => {
+  try {
+    await axios.put(
+      `http://localhost:5000/api/procurement/${requestId}/status`,
+      { status },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    fetchProjectDetails();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to update procurement status");
+  }
+};
+
+const addNotification = async () => {
+  try {
+    await axios.post(
+      `http://localhost:5000/api/notifications/${id}`,
+      {
+        title: notificationTitle,
+        message: notificationMessage,
+        type: notificationType,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert("Notification added successfully");
+
+    setNotificationTitle("");
+    setNotificationMessage("");
+    setNotificationType("Reminder");
+
+    fetchProjectDetails();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to add notification");
+  }
+};
+
+const extractDatesFromText = async () => {
+  try {
+    await axios.post(
+      `http://localhost:5000/api/extract/${id}`,
+      { text: documentText },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert("Dates extracted and reminders created");
+    setDocumentText("");
+    fetchProjectDetails();
+  } catch (error) {
+    console.error(error);
+    alert("Date extraction failed");
+  }
+};
+
+const toggleDocumentSelection = (docId) => {
+  setSelectedDocuments((prev) =>
+    prev.includes(docId)
+      ? prev.filter((id) => id !== docId)
+      : [...prev, docId]
+  );
+};
+
+const deleteSelectedDocuments = async () => {
+  if (selectedDocuments.length === 0) {
+    alert("Please select at least one document");
+    return;
+  }
+
+  const confirmDelete = window.confirm(
+    "Are you sure you want to move selected documents to Recycle Bin?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await axios.put(
+      "http://localhost:5000/api/uploads/delete",
+      { documentIds: selectedDocuments },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert("Documents moved to Recycle Bin");
+    setSelectedDocuments([]);
+    setDeleteMode(false);
+    fetchProjectDetails();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to delete documents");
+  }
+};
 
   return (
     <div style={styles.container}>
@@ -328,6 +553,23 @@ const downloadDocument = async (doc) => {
     Upload Document
   </button>
   <h4 style={{ marginTop: "20px" }}>Uploaded Documents</h4>
+  <div style={{ marginBottom: "10px" }}>
+  <button
+    style={styles.addBtn}
+    onClick={() => setDeleteMode(!deleteMode)}
+  >
+    {deleteMode ? "Cancel Delete" : "Delete Documents"}
+  </button>
+
+  {deleteMode && (
+    <button
+      style={{ ...styles.addBtn, marginTop: "8px", backgroundColor: "#c53030" }}
+      onClick={deleteSelectedDocuments}
+    >
+      Move Selected to Recycle Bin
+    </button>
+  )}
+</div>
 
 {documents.length === 0 ? (
   <p style={styles.emptyText}>No documents uploaded yet.</p>
@@ -341,7 +583,16 @@ const downloadDocument = async (doc) => {
         borderRadius: "6px",
         marginTop: "10px",
       }}
+      
     >
+      {deleteMode && (
+  <input
+    type="checkbox"
+    checked={selectedDocuments.includes(doc.id)}
+    onChange={() => toggleDocumentSelection(doc.id)}
+    style={{ marginRight: "8px" }}
+  />
+)}
       <p><strong>{doc.file_name}</strong></p>
       <p>{doc.document_category}</p>
 
@@ -359,11 +610,293 @@ const downloadDocument = async (doc) => {
               </div>
             )}
           </div>
+          <div style={styles.card}>
+  <h3 style={styles.sectionTitle}>Budget Monitoring</h3>
+
+  {budgetSummary && (
+    <div style={styles.infoGrid}>
+      <div style={styles.infoItem}>
+        <span style={styles.infoLabel}>Total Budget</span>
+        <span style={styles.infoValue}>
+          ₹{budgetSummary.total_budget}
+        </span>
+      </div>
+
+      <div style={styles.infoItem}>
+        <span style={styles.infoLabel}>Total Spent</span>
+        <span style={styles.infoValue}>
+          ₹{budgetSummary.total_spent}
+        </span>
+      </div>
+
+      <div style={styles.infoItem}>
+        <span style={styles.infoLabel}>Remaining Balance</span>
+        <span style={styles.infoValue}>
+          ₹{budgetSummary.remaining_balance}
+        </span>
+      </div>
+    </div>
+  )}
+
+  <div style={styles.addSection}>
+    <h4 style={styles.addTitle}>Add Expense</h4>
+
+    <input
+      style={styles.input}
+      type="text"
+      placeholder="Expense title"
+      value={expenseTitle}
+      onChange={(e) => setExpenseTitle(e.target.value)}
+    />
+
+    <input
+      style={styles.input}
+      type="number"
+      placeholder="Amount"
+      value={expenseAmount}
+      onChange={(e) => setExpenseAmount(e.target.value)}
+    />
+
+    <select
+      style={styles.input}
+      value={expenseCategory}
+      onChange={(e) => setExpenseCategory(e.target.value)}
+    >
+      <option>Equipment</option>
+      <option>Travel</option>
+      <option>Software</option>
+      <option>Research Materials</option>
+      <option>Miscellaneous</option>
+    </select>
+
+    <input
+      style={styles.input}
+      type="date"
+      value={expenseDate}
+      onChange={(e) => setExpenseDate(e.target.value)}
+    />
+
+    <textarea
+      style={styles.input}
+      placeholder="Description"
+      value={expenseDescription}
+      onChange={(e) => setExpenseDescription(e.target.value)}
+    />
+
+    <button style={styles.addBtn} onClick={addExpense}>
+      Add Expense
+    </button>
+  </div>
+
+  <h4 style={{ marginTop: "20px" }}>Expense Records</h4>
+
+  {expenses.length === 0 ? (
+    <p style={styles.emptyText}>No expenses added yet.</p>
+  ) : (
+    expenses.map((expense) => (
+      <div
+        key={expense.id}
+        style={{
+          border: "1px solid #eee",
+          borderRadius: "6px",
+          padding: "10px",
+          marginTop: "10px",
+        }}
+      >
+        <p><strong>{expense.title}</strong></p>
+        <p>₹{expense.amount}</p>
+        <p>{expense.category}</p>
+        <p>
+          {new Date(expense.expense_date).toLocaleDateString()}
+        </p>
+      </div>
+    ))
+  )}
+</div>
+<div style={styles.card}>
+  <h3 style={styles.sectionTitle}>Procurement Management</h3>
+
+  <div style={styles.addSection}>
+    <h4 style={styles.addTitle}>Add Procurement Request</h4>
+
+    <input
+      style={styles.input}
+      type="text"
+      placeholder="Item name"
+      value={itemName}
+      onChange={(e) => setItemName(e.target.value)}
+    />
+
+    <input
+      style={styles.input}
+      type="number"
+      placeholder="Quantity"
+      value={quantity}
+      onChange={(e) => setQuantity(e.target.value)}
+    />
+
+    <input
+      style={styles.input}
+      type="number"
+      placeholder="Estimated cost"
+      value={estimatedCost}
+      onChange={(e) => setEstimatedCost(e.target.value)}
+    />
+
+    <input
+      style={styles.input}
+      type="text"
+      placeholder="Vendor name"
+      value={vendorName}
+      onChange={(e) => setVendorName(e.target.value)}
+    />
+
+    <input
+      style={styles.input}
+      type="date"
+      value={requestDate}
+      onChange={(e) => setRequestDate(e.target.value)}
+    />
+
+    <textarea
+      style={styles.input}
+      placeholder="Description"
+      value={procurementDescription}
+      onChange={(e) => setProcurementDescription(e.target.value)}
+    />
+
+    <button style={styles.addBtn} onClick={addProcurement}>
+      Add Procurement Request
+    </button>
+  </div>
+
+  <h4 style={{ marginTop: "20px" }}>Procurement Records</h4>
+
+  {procurements.length === 0 ? (
+    <p style={styles.emptyText}>No procurement requests added yet.</p>
+  ) : (
+    procurements.map((item) => (
+      <div
+        key={item.id}
+        style={{
+          border: "1px solid #eee",
+          borderRadius: "6px",
+          padding: "10px",
+          marginTop: "10px",
+        }}
+      >
+        <p><strong>{item.item_name}</strong></p>
+        <p>Quantity: {item.quantity}</p>
+        <p>Estimated Cost: ₹{item.estimated_cost}</p>
+        <p>Vendor: {item.vendor_name || "N/A"}</p>
+        <div style={{ marginTop: "10px" }}>
+  <label>Status: </label>
+
+  <select
+    value={item.status}
+    onChange={(e) =>
+      updateProcurementStatus(item.id, e.target.value)
+    }
+    style={{
+      padding: "5px",
+      borderRadius: "5px",
+      marginLeft: "10px",
+    }}
+  >
+    <option>Pending</option>
+    <option>Approved</option>
+    <option>Ordered</option>
+    <option>Delivered</option>
+  </select>
+</div>
+        <p>Date: {new Date(item.request_date).toLocaleDateString()}</p>
+      </div>
+    ))
+  )}
+</div>
+<div style={styles.card}>
+  <h3 style={styles.sectionTitle}>Notifications & Reminders</h3>
+
+  <div style={styles.addSection}>
+    <h4 style={styles.addTitle}>Add Reminder</h4>
+
+    <input
+      style={styles.input}
+      type="text"
+      placeholder="Notification title"
+      value={notificationTitle}
+      onChange={(e) => setNotificationTitle(e.target.value)}
+    />
+
+    <textarea
+      style={styles.input}
+      placeholder="Message"
+      value={notificationMessage}
+      onChange={(e) => setNotificationMessage(e.target.value)}
+    />
+
+    <select
+      style={styles.input}
+      value={notificationType}
+      onChange={(e) => setNotificationType(e.target.value)}
+    >
+      <option>Reminder</option>
+      <option>Deadline Alert</option>
+      <option>Budget Alert</option>
+      <option>Procurement Alert</option>
+    </select>
+
+    <button style={styles.addBtn} onClick={addNotification}>
+      Add Notification
+    </button>
+  </div>
+
+  <h4 style={{ marginTop: "20px" }}>Project Alerts</h4>
+
+  {notifications.length === 0 ? (
+    <p style={styles.emptyText}>No notifications yet.</p>
+  ) : (
+    notifications.map((note) => (
+      <div
+        key={note.id}
+        style={{
+          border: "1px solid #eee",
+          borderRadius: "6px",
+          padding: "10px",
+          marginTop: "10px",
+        }}
+      >
+        <p><strong>{note.title}</strong></p>
+        <p>{note.message}</p>
+        <p>Type: {note.type}</p>
+      </div>
+    ))
+  )}
+</div>
+<div style={styles.card}>
+  <h3 style={styles.sectionTitle}>Automatic Reminder Extraction</h3>
+
+  <p style={styles.emptyText}>
+    Paste text from funding agency forms, sanction orders, or reports. The system will detect dates and create reminders automatically.
+  </p>
+
+  <textarea
+    style={styles.input}
+    placeholder="Paste document text here..."
+    value={documentText}
+    onChange={(e) => setDocumentText(e.target.value)}
+  />
+
+  <button style={styles.addBtn} onClick={extractDatesFromText}>
+    Extract Dates & Create Reminders
+  </button>
+</div>
         </div>
       </div>
     </div>
   );
 }
+
 
 const styles = {
   container: { minHeight: "100vh", backgroundColor: "#f0f4f8" },

@@ -6,7 +6,8 @@ const projectRoutes = require("./routes/projects");
 const documentRoutes = require("./routes/document");
 const budgetRoutes = require("./routes/budget");
 const procurementRoutes = require("./routes/procurement");
-
+const notificationRoutes = require("./routes/notification");
+const extractRoutes = require("./routes/extract");
 const app = express();
 
 app.use(cors());
@@ -19,7 +20,8 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/procurement", procurementRoutes);
-
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/extract", extractRoutes);
 // Test route
 app.get("/", (req, res) => {
   res.send("Research Project Support Backend Running");
