@@ -40,4 +40,23 @@ router.post("/:id", authMiddleware, async (req, res) => {
   }
 });
 
+// DELETE NOTIFICATION / REMINDER
+router.delete("/:notificationId", authMiddleware, async (req, res) => {
+  try {
+    await pool.query(
+      "DELETE FROM notifications WHERE id = $1",
+      [req.params.notificationId]
+    );
+
+    res.json({
+      message: "Notification deleted successfully"
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
+});
+
 module.exports = router;

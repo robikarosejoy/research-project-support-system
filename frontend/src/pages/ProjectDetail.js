@@ -320,6 +320,7 @@ const updateProcurementStatus = async (requestId, status) => {
 };
 
 const addNotification = async () => {
+  
   try {
     await axios.post(
       `http://localhost:5000/api/notifications/${id}`,
@@ -347,7 +348,29 @@ const addNotification = async () => {
     alert("Failed to add notification");
   }
 };
+const deleteNotification = async (notificationId) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this reminder?"
+  );
 
+  if (!confirmDelete) return;
+
+  try {
+    await axios.delete(
+      `http://localhost:5000/api/notifications/${notificationId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    fetchProjectDetails();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to delete reminder");
+  }
+};
 const extractDatesFromText = async () => {
   try {
     await axios.post(
@@ -877,6 +900,20 @@ const deleteSelectedDocuments = async () => {
         <p><strong>{note.title}</strong></p>
         <p>{note.message}</p>
         <p>Type: {note.type}</p>
+        <button
+  style={{
+    marginTop: "10px",
+    backgroundColor: "#c53030",
+    color: "white",
+    border: "none",
+    padding: "6px 12px",
+    borderRadius: "5px",
+    cursor: "pointer",
+  }}
+  onClick={() => deleteNotification(note.id)}
+>
+  Delete Reminder
+</button>
       </div>
     ))
   )}
