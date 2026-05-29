@@ -1,3 +1,5 @@
+require("dotenv").config({ path: "./env.txt" });
+const startReminderScheduler = require("./utils/reminderScheduler");
 const express = require("express");
 const cors = require("cors");
 const uploadRoutes = require("./routes/upload");
@@ -30,3 +32,4 @@ app.get("/", (req, res) => {
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
+startReminderScheduler();

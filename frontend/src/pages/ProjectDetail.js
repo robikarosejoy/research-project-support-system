@@ -143,24 +143,7 @@ function ProjectDetail() {
       alert("Document uploaded successfully");
       // Auto create reminder from uploaded document
 
-const today = new Date();
-const reminderDate = new Date();
-reminderDate.setDate(today.getDate() + 30);
 
-await axios.post(
-  `http://localhost:5000/api/notifications/${id}`,
-  {
-    title: "Document Follow-up Reminder",
-    message: `Follow up required for uploaded ${documentCategory}`,
-    type: "Reminder",
-    reminder_date: reminderDate,
-  },
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
       setDocumentFile(null);
 
       if (fileInputRef.current) {
