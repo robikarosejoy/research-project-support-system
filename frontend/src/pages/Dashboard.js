@@ -12,8 +12,10 @@ import {
 } from "react-icons/fa";
 
 function Dashboard() {
+  
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
 
   const [projects, setProjects] = useState([]);
 
@@ -95,20 +97,22 @@ function Dashboard() {
             Projects
           </h2>
 
-          <button
-            onClick={() => navigate("/create-project")}
-            style={{
-              background: "#6c63ff",
-              color: "white",
-              border: "none",
-              padding: "12px 18px",
-              borderRadius: "14px",
-              cursor: "pointer",
-              fontWeight: "600",
-            }}
-          >
-            + New Project
-          </button>
+          {role === "PI" && (
+  <button
+    onClick={() => navigate("/create-project")}
+    style={{
+      background: "#6c63ff",
+      color: "white",
+      border: "none",
+      padding: "12px 18px",
+      borderRadius: "14px",
+      cursor: "pointer",
+      fontWeight: "600",
+    }}
+  >
+    + New Project
+  </button>
+)}
         </div>
 
         {projects.length === 0 ? (

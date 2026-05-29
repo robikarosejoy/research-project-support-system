@@ -21,4 +21,14 @@ function DashboardLayout({ children }) {
   );
 }
 
+<button
+  onClick={() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  }}
+>
+  Sign Out
+</button>
+
 export default DashboardLayout;

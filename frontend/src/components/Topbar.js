@@ -1,60 +1,57 @@
-import { FaBell, FaSearch } from "react-icons/fa";
+import { FaBell, FaSearch, FaUserShield } from "react-icons/fa";
 
 function Topbar() {
+  const role = localStorage.getItem("role") || "User";
+  const name = localStorage.getItem("name") || role;
+
+  const roleLabels = {
+    PI: "Principal Investigator",
+    "Co-PI": "Co-Principal Investigator",
+    JRF: "Junior Research Fellow",
+    SRF: "Senior Research Fellow",
+  };
+
   return (
     <div
       style={{
-        height: "90px",
-        background: "#ffffff",
+        background: "linear-gradient(135deg, #ffffff, #f7f8ff)",
         borderBottom: "1px solid #e5e7eb",
+        padding: "18px 32px",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "0 35px",
-        marginLeft: "260px",
+        boxShadow: "0 8px 24px rgba(15,23,42,0.05)",
       }}
     >
       <div>
         <h2
           style={{
             fontSize: "28px",
-            fontWeight: "700",
+            fontWeight: "800",
             color: "#111827",
-            marginBottom: "4px",
+            margin: 0,
           }}
         >
           Dashboard
         </h2>
-
-        <p
-          style={{
-            fontSize: "14px",
-            color: "#9ca3af",
-          }}
-        >
-          Welcome back, Principal Investigator
+        <p style={{ fontSize: "14px", color: "#8b90a0", marginTop: "6px" }}>
+          Welcome back, {roleLabels[role] || role}
         </p>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "18px",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            background: "#f3f4f6",
-            padding: "12px 18px",
-            borderRadius: "14px",
+            background: "#ffffff",
+            padding: "12px 16px",
+            borderRadius: "16px",
             width: "320px",
+            border: "1px solid #e5e7eb",
           }}
         >
           <FaSearch color="#9ca3af" />
-
           <input
             type="text"
             placeholder="Search projects..."
@@ -73,15 +70,15 @@ function Topbar() {
           style={{
             width: "46px",
             height: "46px",
-            borderRadius: "14px",
-            background: "#f3f4f6",
+            borderRadius: "16px",
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            cursor: "pointer",
           }}
         >
-          <FaBell color="#6b7280" />
+          <FaBell color="#6c63ff" />
         </div>
 
         <div
@@ -89,45 +86,62 @@ function Topbar() {
             display: "flex",
             alignItems: "center",
             gap: "12px",
+            background: "#ffffff",
+            padding: "8px 14px",
+            borderRadius: "18px",
+            border: "1px solid #e5e7eb",
           }}
         >
           <div
             style={{
-              width: "46px",
-              height: "46px",
+              width: "44px",
+              height: "44px",
               borderRadius: "50%",
-              background: "#6c63ff",
+              background: "linear-gradient(135deg, #6c63ff, #8b5cf6)",
               color: "white",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              fontWeight: "700",
+              fontWeight: "800",
             }}
           >
-            PI
+            <FaUserShield />
           </div>
 
           <div>
             <p
               style={{
                 fontSize: "14px",
-                fontWeight: "600",
+                fontWeight: "700",
                 color: "#111827",
+                margin: 0,
               }}
             >
-              Dr. PI
+              {name}
             </p>
-
-            <p
-              style={{
-                fontSize: "12px",
-                color: "#9ca3af",
-              }}
-            >
-              Principal Investigator
+            <p style={{ fontSize: "12px", color: "#8b90a0", margin: 0 }}>
+              {roleLabels[role] || role}
             </p>
           </div>
         </div>
+
+        <button
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = "/";
+          }}
+          style={{
+            background: "#ef4444",
+            color: "white",
+            border: "none",
+            padding: "12px 18px",
+            borderRadius: "14px",
+            cursor: "pointer",
+            fontWeight: "700",
+          }}
+        >
+          Sign Out
+        </button>
       </div>
     </div>
   );
