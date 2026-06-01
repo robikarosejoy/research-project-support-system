@@ -16,8 +16,11 @@ function Dashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
-
+const [searchTerm, setSearchTerm] = useState("");
   const [projects, setProjects] = useState([]);
+  const filteredProjects = projects.filter((project) =>
+  project.title.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
   useEffect(() => {
     fetch("http://localhost:5000/api/projects", {
@@ -125,13 +128,13 @@ const role = localStorage.getItem("role");
               gap: "24px",
             }}
           >
-            {projects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onClick={() => navigate(`/project/${project.id}`)}
-              />
-            ))}
+            {filteredProjects.map((project) => (
+  <ProjectCard
+    key={project.id}
+    project={project}
+    onClick={() => navigate(`/project/${project.id}`)}
+  />
+))}
           </div>
         )}
       </div>

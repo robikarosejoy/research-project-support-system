@@ -2,7 +2,7 @@ const express = require("express");
 const pool = require("../db");
 const authMiddleware = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
-
+const sendEmail = require("../utils/emailService");
 const router = express.Router();
 
 // Helper: check whether user can access project
@@ -210,6 +210,19 @@ router.post(
          VALUES ($1, $2, $3)`,
         [req.params.id, user.id, role]
       );
+      
+      await sendEmail(
+  user.email,
+  "Project Assignment Notification",
+  `Hello ${user.name || "User"},
+
+You have been added as ${role} to the project: ${access.project.title}.
+
+Please login to the Research Project Support System to view the project details.
+
+Regards,
+Research Project Support System`
+);
 
       res.status(201).json({
         message: "Member added successfully",
