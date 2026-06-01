@@ -18,20 +18,42 @@ function Dashboard() {
 const role = localStorage.getItem("role");
 const [searchTerm, setSearchTerm] = useState("");
   const [projects, setProjects] = useState([]);
+
+  const [researchersCount, setResearchersCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
   const filteredProjects = projects.filter((project) =>
   project.title.toLowerCase().includes(searchTerm.toLowerCase())
 );
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/projects", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setProjects(data))
-      .catch((err) => console.error(err));
-  }, [token]);
+useEffect(() => {
+  fetch("http://localhost:5000/api/projects", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setProjects(data))
+    .catch((err) => console.error(err));
+
+  fetch("http://localhost:5000/api/projects/researchers/count", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setResearchersCount(data.count))
+    .catch((err) => console.error(err));
+
+  fetch("http://localhost:5000/api/projects/notifications/count", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setNotificationCount(data.count))
+    .catch((err) => console.error(err));
+
+}, [token]);
 
   const totalBudget = projects.reduce(
     (sum, project) => sum + Number(project.total_budget || 0),
@@ -58,7 +80,7 @@ const [searchTerm, setSearchTerm] = useState("");
 
         <StatCard
           title="Notifications"
-          value="0"
+       value={notificationCount}
           subtitle="Project alerts"
           icon={<FaBell color="white" />}
           color="#f59e0b"
@@ -66,7 +88,7 @@ const [searchTerm, setSearchTerm] = useState("");
 
         <StatCard
           title="Researchers"
-          value="0"
+         value={researchersCount}
           subtitle="Across all projects"
           icon={<FaUsers color="white" />}
           color="#22c55e"

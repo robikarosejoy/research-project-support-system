@@ -109,7 +109,37 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+// GET RESEARCHERS COUNT
+router.get("/researchers/count", authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT COUNT(*) AS count FROM project_members`
+    );
 
+    res.json({
+      count: result.rows[0].count,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET NOTIFICATIONS COUNT
+router.get("/notifications/count", authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT COUNT(*) AS count FROM notifications`
+    );
+
+    res.json({
+      count: result.rows[0].count,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 // GET SINGLE PROJECT
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
