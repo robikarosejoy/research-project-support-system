@@ -1,6 +1,21 @@
+import { useEffect, useState } from "react";
 import { FaBell, FaSearch, FaUserShield } from "react-icons/fa";
 
 function Topbar() {
+  const token = localStorage.getItem("token");
+const [showNotifications, setShowNotifications] = useState(false);
+const [notifications, setNotifications] = useState([]);
+
+useEffect(() => {
+  fetch("http://localhost:5000/api/projects/notifications/latest", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setNotifications(data))
+    .catch((err) => console.error(err));
+}, [token]);
   const role = localStorage.getItem("role") || "User";
   const name = localStorage.getItem("name") || role;
 

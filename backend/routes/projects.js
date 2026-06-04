@@ -140,6 +140,88 @@ router.get("/notifications/count", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// GET LATEST NOTIFICATIONS FOR DASHBOARD BELL
+router.get("/notifications/latest", authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, title, message, type, created_at
+       FROM notifications
+       ORDER BY created_at DESC
+       LIMIT 5`
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
+
+// GENERATE PROJECT SUMMARY
+router.get("/:id/summary", authMiddleware, async (req, res) => {
+  try {
+    const access = await checkProjectAccess(req.params.id, req.user);
+
+    if (!access.allowed) {
+      return res.status(access.status).json({
+        message: access.message,
+      });
+    }
+
+    const project = access.project;
+
+    const members = await pool.query(
+      `SELECT pm.role, u.name, u.email
+       FROM project_members pm
+       INNER JOIN users u ON pm.user_id = u.id
+       WHERE pm.project_id = $1`,
+      [req.params.id]
+    );
+
+    const documents = await pool.query(
+      `SELECT file_name, document_category, uploaded_at
+       FROM documents
+       WHERE project_id = $1 AND is_deleted = false
+       ORDER BY uploaded_at DESC`,
+      [req.params.id]
+    );
+
+    const notifications = await pool.query(
+      `SELECT title, message, type, created_at
+       FROM notifications
+       WHERE project_id = $1
+       ORDER BY created_at DESC`,
+      [req.params.id]
+    );
+
+    const milestones = await pool.query(
+      `SELECT title, due_date, status
+       FROM milestones
+       WHERE project_id = $1
+       ORDER BY due_date ASC`,
+      [req.params.id]
+    );
+
+    const summary = {
+      project,
+      members: members.rows,
+      documents: documents.rows,
+      notifications: notifications.rows,
+      milestones: milestones.rows,
+    };
+
+    res.json(summary);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
+
 // GET SINGLE PROJECT
 router.get("/:id", authMiddleware, async (req, res) => {
   try {

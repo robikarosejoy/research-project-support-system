@@ -10,7 +10,7 @@ function ProjectDetail() {
   const role = localStorage.getItem("role");
 
   const fileInputRef = useRef(null);
-
+  const [summary, setSummary] = useState(null);
   const [project, setProject] = useState(null);
   const [members, setMembers] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -367,6 +367,24 @@ function ProjectDetail() {
 
   if (loading) return <p style={{ padding: "32px" }}>Loading...</p>;
   if (!project) return <p style={{ padding: "32px" }}>Project not found.</p>;
+
+const generateSummary = async () => {
+  try {
+    const res = await axios.get(
+      `http://localhost:5000/api/projects/${id}/summary`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setSummary(res.data);
+  } catch (error) {
+    console.error(error);
+    alert("Failed to generate summary");
+  }
+};
 
   return (
     <div style={styles.container}>
